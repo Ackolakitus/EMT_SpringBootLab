@@ -38,7 +38,7 @@ public class DataHolder {
         for (int i = 0; i < 5; i++) {
             Country c = new Country();
             c.setName(String.format("Country %d", i));
-            c.setContinent(String.format("Continent %s", continents[i]));
+            c.setContinent(String.format("%s", continents[i]));
             countryRepository.save(c);
 
             Author a = new Author();

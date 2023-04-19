@@ -3,14 +3,15 @@ import mk.ukim.finki.emt.lab.model.Author;
 import mk.ukim.finki.emt.lab.model.Book;
 import mk.ukim.finki.emt.lab.model.dto.BookDto;
 import mk.ukim.finki.emt.lab.model.enumerations.Category;
+import mk.ukim.finki.emt.lab.model.events.BookCreatedEvent;
 import mk.ukim.finki.emt.lab.model.exceptions.AuthorNotFoundException;
 import mk.ukim.finki.emt.lab.model.exceptions.BookNotFoundException;
 import mk.ukim.finki.emt.lab.repository.BookRepository;
 import mk.ukim.finki.emt.lab.service.AuthorService;
 import mk.ukim.finki.emt.lab.service.BookService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,10 +19,12 @@ import java.util.Optional;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final AuthorService authorService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public BookServiceImpl(BookRepository bookRepository, AuthorService authorService) {
+    public BookServiceImpl(BookRepository bookRepository, AuthorService authorService, ApplicationEventPublisher applicationEventPublisher) {
         this.bookRepository = bookRepository;
         this.authorService = authorService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     @Override
@@ -40,7 +43,6 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    @Transactional
     public Optional<Book> save(String name, Category category, Long authorId, Integer availableCopies) {
         Author author = this.authorService.findById(authorId).orElseThrow(() -> new AuthorNotFoundException(authorId));
 
@@ -53,8 +55,11 @@ public class BookServiceImpl implements BookService {
     public Optional<Book> save(BookDto bookDto) {
         Author author = this.authorService.findById(bookDto.getAuthor()).orElseThrow(() -> new AuthorNotFoundException(bookDto.getAuthor()));
 
+        this.bookRepository.deleteByName(bookDto.getName());
         Book book = new Book(bookDto.getName(),bookDto.getCategory(),author,bookDto.getAvailableCopies());
         this.bookRepository.save(book);
+
+        this.applicationEventPublisher.publishEvent(new BookCreatedEvent(book));
         return Optional.of(book);
     }
 
@@ -96,14 +101,18 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public Optional<Book> markAsTakes(Long id) {
+    public void markAsTaken(Long id) {
         Book book = this.bookRepository.findById(id).orElseThrow(()-> new BookNotFoundException(id));
-        if(book.getAvailableCopies()==0)
-            return Optional.of(book);
+        if (book == null) {
+            return;
+        }
 
-        book.setAvailableCopies(book.getAvailableCopies()-1);
-        this.bookRepository.save(book);
-        return Optional.of(book);
+        if(book.getAvailableCopies() > 0){
+            book.setAvailableCopies(book.getAvailableCopies() - 1);
+            this.bookRepository.save(book);
+        }else{
+            return;
+        }
     }
 
 

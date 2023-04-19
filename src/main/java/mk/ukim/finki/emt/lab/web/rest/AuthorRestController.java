@@ -1,15 +1,15 @@
 package mk.ukim.finki.emt.lab.web.rest;
 
 import mk.ukim.finki.emt.lab.model.Author;
+import mk.ukim.finki.emt.lab.model.Country;
 import mk.ukim.finki.emt.lab.service.AuthorService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-//@CrossOrigin(origins = "http://localhost:porta")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/authors")
 public class AuthorRestController {
 
@@ -22,5 +22,26 @@ public class AuthorRestController {
     @GetMapping
     public List<Author> findAll(){
         return this.authorService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Author> findById(@PathVariable Long id) {
+        return this.authorService.findById(id)
+                .map(manufacturer -> ResponseEntity.ok().body(manufacturer))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/add")
+    public ResponseEntity<Author> save(@RequestParam String name, @RequestParam String surname, @RequestParam Long countryId) {
+        return this.authorService.save(name, surname, countryId)
+                .map(manufacturer -> ResponseEntity.ok().body(manufacturer))
+                .orElseGet(() -> ResponseEntity.badRequest().build());
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Author> deleteById(@PathVariable Long id) {
+        this.authorService.deleteById(id);
+        if(this.authorService.findById(id).isEmpty()) return ResponseEntity.ok().build();
+        return ResponseEntity.badRequest().build();
     }
 }

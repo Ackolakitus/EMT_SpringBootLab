@@ -1,6 +1,5 @@
 package mk.ukim.finki.emt.lab.service;
 
-import mk.ukim.finki.emt.lab.model.Author;
 import mk.ukim.finki.emt.lab.model.Book;
 import mk.ukim.finki.emt.lab.model.dto.BookDto;
 import mk.ukim.finki.emt.lab.model.enumerations.Category;
@@ -23,7 +22,7 @@ public interface BookService {
 
     void deleteById(Long id);
 
-    Optional<Book> markAsTakes(Long id);
+    void markAsTaken(Long id);
 
 //    void refreshMaterializedView();
 }

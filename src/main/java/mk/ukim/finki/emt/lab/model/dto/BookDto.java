@@ -10,7 +10,6 @@ public class BookDto {
 
     private String name;
 
-    @Enumerated(EnumType.STRING)
     private Category category;
 
     private Long author;

@@ -7,9 +7,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-//@CrossOrigin(origins = "http://localhost:porta")
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/books")
 public class BookRestController {
 
@@ -26,13 +27,16 @@ public class BookRestController {
 
     @GetMapping("/{id}")
     private ResponseEntity<Book> findById(@PathVariable Long id){
-        return this.bookService.findById(id).map(book -> ResponseEntity.ok().body(book)).orElseGet(()-> ResponseEntity.notFound().build());
+        return this.bookService.findById(id)
+                .map(book -> ResponseEntity.ok().body(book))
+                .orElseGet(()-> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/add")
     public ResponseEntity<Book> save(@RequestBody BookDto bookDto) {
         return this.bookService.save(bookDto)
-                .map(book -> ResponseEntity.ok().body(book)).orElseGet(()->ResponseEntity.badRequest().build());
+                .map(book -> ResponseEntity.ok().body(book))
+                .orElseGet(()->ResponseEntity.badRequest().build());
     }
 
     @PutMapping("/edit/{id}")
@@ -47,5 +51,19 @@ public class BookRestController {
         this.bookService.deleteById(id);
         if(this.bookService.findById(id).isEmpty()) return ResponseEntity.ok().build();
         return ResponseEntity.badRequest().build();
+    }
+
+    @PutMapping("/markAsTaken/{id}")
+    public ResponseEntity<Optional<Book>> markAsTaken(@PathVariable Long id) {
+//        return this.bookService.markAsTaken(id)
+//                .map(book -> ResponseEntity.ok().body(book))
+//                .orElseGet(() -> ResponseEntity.badRequest().build());
+        Optional<Book> book = bookService.findById(id);
+        if (book.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        } else {
+            this.bookService.markAsTaken(id);
+            return ResponseEntity.ok(book);
+        }
     }
 }
